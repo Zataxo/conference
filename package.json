@@ -1,0 +1,26 @@
+{
+  "name": "conference",
+  "version": "1.0.0",
+  "description": "A simple Ethereum smart contract and lightwallet example.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zataxo/conference.git"
+  },
+  "author": "hassan ismat",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Zataxo/conference/issues"
+  },
+  "homepage": "https://github.com/Zataxo/conference#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "hardhat": "^2.17.1"
+  },
+  "dependencies": {
+    "console.log": "^0.1.3"
+  }
+}

@@ -1,50 +1,56 @@
+//SPDX-License-Identifier:MIT
+pragma solidity ^0.8.19;
 contract Conference {  // can be killed, so the owner gets sent the money in the end
 
-	address public organizer;
+	address payable public organizer;
 	mapping (address => uint) public registrantsPaid;
 	uint public numRegistrants;
 	uint public quota;
 
-	event Deposit(address _from, uint _amount); // so you can log the event
-	event Refund(address _to, uint _amount); // so you can log the event
+    error soldOut(string message);
 
-	function Conference() {
-		organizer = msg.sender;		
+	event Deposit(address indexed _from, uint _amount); // so you can log the event
+	event Refund(address indexed _to, uint _amount); // so you can log the event
+
+	constructor() {
+		organizer = payable(msg.sender);		
 		quota = 100;
 		numRegistrants = 0;
 	}
+    function getOrginizer() public view returns(address){
+        return organizer;
+    }
 
-	function buyTicket() public {
+	function buyTicket() public payable {
 		if (numRegistrants >= quota) { 
-			throw; // throw ensures funds will be returned
+			revert soldOut("Sold out!!!");
 		}
 		registrantsPaid[msg.sender] = msg.value;
 		numRegistrants++;
-		Deposit(msg.sender, msg.value);
+		emit Deposit(msg.sender, msg.value);
 	}
 
-	function changeQuota(uint newquota) public {
-		if (msg.sender != organizer) { return; }
+	function changeQuota(uint newquota) public onlyOwner {
 		quota = newquota;
 	}
+    modifier onlyOwner {
+        require(msg.sender == organizer, "only owner can call");
+        _;
+    }
 
-	function refundTicket(address recipient, uint amount) public {
-		if (msg.sender != organizer) { return; }
-		if (registrantsPaid[recipient] == amount) { 
-			address myAddress = this;
-			if (myAddress.balance >= amount) { 
-				recipient.send(amount);
-				Refund(recipient, amount);
+	function refundTicket(address payable  recipient, uint amount) public onlyOwner{
+			require(registrantsPaid[recipient] == amount,"Refund Failed");
+			if (address(this).balance >= amount) { 
+				(bool isSucsses, ) = recipient.call{value:amount}("");
+                require(isSucsses,"Refund Failed");
+				emit Refund(recipient, amount);
 				registrantsPaid[recipient] = 0;
 				numRegistrants--;
 			}
-		}
-		return;
+		
 	}
 
-	function destroy() {
-		if (msg.sender == organizer) { // without this funds could be locked in the contract forever!
-			suicide(organizer);
-		}
+	function destroy() public onlyOwner {
+		 selfdestruct(organizer);
 	}
 }
